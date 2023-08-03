@@ -12,6 +12,39 @@ defmodule Days.Day1 do
     maxLoop(0)
   end
 
+  def partB do
+    IO.puts("Day 1 - Part B:")
+
+    inputFile = "input/day1.txt"
+    fileStream = File.stream!(inputFile)
+    # IO.inspect(fileStream)
+
+    this = self()
+    loopProc = spawn_link(fn -> sumLoop(0, this) end)
+    spawn_link(fn -> readFileStream(fileStream, loopProc) end)
+    topThree = topThreeLoop({0, 0, 0})
+    Tuple.sum(topThree)
+  end
+
+  defp topThreeLoop(topThree) do
+    receive do
+      {:sum, value} ->
+        case topThree do
+          {x, y, _} when value > x ->
+            topThreeLoop({value, x, y})
+          {x, y, _} when value > y ->
+            topThreeLoop({x, value, y})
+          {x, y, z} when value > z ->
+            topThreeLoop({x, y, value})
+          {x, y, z} ->
+            topThreeLoop({x, y, z})
+        end
+      :eof ->
+        topThree
+    end
+
+  end
+
   defp maxLoop(max) do
     receive do
       {:sum, x} ->
